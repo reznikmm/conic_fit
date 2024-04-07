@@ -5,4 +5,29 @@
 
 package Curve_Fit is
    pragma Pure;
+
+   type Geometric_Parameter_Index is new Integer range 1 .. 5;
+   Center_X        : constant Geometric_Parameter_Index := 1;  --  x₀
+   Center_Y        : constant Geometric_Parameter_Index := 2;  --  y₀
+   Tilt_Angle      : constant Geometric_Parameter_Index := 3;  --  θ
+   Semi_Major_Axis : constant Geometric_Parameter_Index := 4;  --  a
+   Semi_Minor_Axis : constant Geometric_Parameter_Index := 5;  --  b
+
+   --  Ellipse canonical equation:
+   --
+   --   x̆²    y̆²
+   --  --- + --- = 1
+   --   a²    b²
+   --
+   --  translated and rotated with
+   --   x̆ =  (x-x₀)cos θ + (y-y₀)sin θ
+   --   y̆ = -(x-x₀)sin θ + (y-y₀)cos θ
+   --
+
+   subtype Frame_Parameter_Index is Geometric_Parameter_Index range
+     Center_X .. Tilt_Angle;
+
+   subtype Ellipse_Parameter_Index is Geometric_Parameter_Index range
+     Semi_Major_Axis .. Semi_Minor_Axis;
+
 end Curve_Fit;
