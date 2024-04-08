@@ -12,6 +12,8 @@ surfaces to data points using the least squares method described in the paper
 
 Currently only ellipse fitting is implemented.
 
+![Ellipse fitting demo](ellipse.png)
+
 ## Installation
 
 Use Alire to install and compile the library:
