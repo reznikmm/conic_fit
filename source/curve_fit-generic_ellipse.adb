@@ -47,13 +47,6 @@ package body Curve_Fit.Generic_Ellipse is
    is
       subtype Matrix_T is Matrix (1 .. 5, Points'Range);
 
-      A : Number renames Result (Semi_Major_Axis);
-      B : Number renames Result (Semi_Minor_Axis);
-      T : Number renames Result (Tilt_Angle);
-
-      function Inside_Ellipse (U, V : Number) return Boolean is
-        (U ** 2 / A ** 2 + V ** 2 / B ** 2 < One);
-
       Frame   : Frame_Parameters renames Result (Frame_Parameter_Index);
       Ellipse : Ellipse_Parameters renames Result (Ellipse_Parameter_Index);
    begin
@@ -62,8 +55,19 @@ package body Curve_Fit.Generic_Ellipse is
 
       for Step in 1 .. Max_Steps loop
          declare
+            A     : constant Number := Result (Semi_Major_Axis);
+            B     : constant Number := Result (Semi_Minor_Axis);
+            T     : constant Number := Result (Tilt_Angle);
+            Sin_T : constant Number := Sin (T);
+            Cos_T : constant Number := Cos (T);
+
+            function Inside_Ellipse (U, V : Number) return Boolean is
+              ((B * U) ** 2 + (A * V) ** 2 < (A * B) ** 2);
+            --  u²/a² + v²/b² < 1
+
             J_T : Matrix_T;
             M   : Matrix (1 .. 5, 1 .. 5) := [others => [others => Zero]];
+
             Residuals : Vector (Points'Range);
          begin
             --  Build J_T and Residuals
@@ -80,38 +84,34 @@ package body Curve_Fit.Generic_Ellipse is
                   U : constant Number := UV (1);
                   V : constant Number := UV (2);
 
-                  Sin_T : constant Number := Sin (T);
-                  Cos_T : constant Number := Cos (T);
+                  UB2 : constant Number := U * B ** 2;
+                  VA2 : constant Number := V * A ** 2;
 
-                  dP_dx : constant Number :=
-                    (2 * Cos_T * U / A ** 2 - 2 * Sin_T * V / B ** 2);
+                  --  dP_dx : constant Number :=
+                  --    2 * (Cos_T * U / A ** 2 - Sin_T * V / B ** 2);
                   --  ∂P / ∂x
 
-                  dP_dy : constant Number :=
-                    (2 * Sin_T * U / A ** 2 + 2 * Cos_T * V / B ** 2);
+                  --  dP_dy : constant Number :=
+                  --    2 * (Sin_T * U / A ** 2 + Cos_T * V / B ** 2);
                   --  ∂P / ∂y
 
-                  dP_dx0 : constant Number :=
-                    (2 * Sin_T * V / B ** 2 - 2 * Cos_T * U / A ** 2);
-                  --  ∂P / ∂x₀
+                  XY : constant Number := Sqrt (UB2 ** 2 + VA2 ** 2);
+                  --  a²b² * Sqrt (dP_dx² + dP_dy²)
 
-                  dP_dy0 : constant Number :=
-                    (Zero - 2 * Sin_T * U / A ** 2 - 2 * Cos_T * V / B ** 2);
-                  --  ∂P / ∂y₀
+                  dP_dx0 : constant Number := 2 * (-Cos_T * UB2 + Sin_T * VA2);
+                  --  a²b² * ∂P / ∂x₀
 
-                  dP_dt : constant Number :=
-                    (2 * U * V / A ** 2 - 2 * U * V / B ** 2);
-                  --  ∂P / ∂θ
+                  dP_dy0 : constant Number := 2 * (-Sin_T * UB2 - Cos_T * VA2);
+                  --  a²b² * ∂P / ∂y₀
 
-                  dP_da : constant Number :=
-                    (Zero - 2 * U ** 2 / A ** 3);
-                  --  ∂P / ∂a
+                  dP_dt : constant Number := 2 * (V * UB2 - U * VA2);
+                  --  a²b² * ∂P / ∂θ
 
-                  dP_db : constant Number :=
-                    (Zero - 2 * V ** 2 / B ** 3);
-                  --  ∂P / ∂b
+                  dP_da : constant Number := -(2 * U ** 2 * B ** 2 / A);
+                  --  a²b² * ∂P / ∂a
 
-                  XY : constant Number := Sqrt (dP_dx ** 2 + dP_dy ** 2);
+                  dP_db : constant Number := -(2 * V ** 2 * A ** 2 / B);
+                  --  a²b² * ∂P / ∂b
 
                   RV : constant Vector_2D := P - Pr;
                begin
@@ -127,13 +127,19 @@ package body Curve_Fit.Generic_Ellipse is
                      Residuals (K) := -Residuals (K);
                   end if;
                end;
-            end loop;
 
-            for K in Matrix_T'Range (2) loop
+               --  Fill upper half of M = J x Jᵀ
                for I in Matrix_T'Range (1) loop
-                  for J in Matrix_T'Range (1) loop
+                  for J in I .. Matrix_T'Last (1) loop
                      M (I, J) := @ + J_T (I, K) * J_T (J, K);
                   end loop;
+               end loop;
+            end loop;
+
+            --  Copy upper half of M to lower half
+            for I in Matrix_T'Range (1) loop
+               for J in I + 1 .. Matrix_T'Last (1) loop
+                  M (J, I) := M (I, J);
                end loop;
             end loop;
 
