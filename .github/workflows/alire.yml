@@ -20,4 +20,4 @@ jobs:
       run: alr build
     - name: Build examples
       run: |
-        echo alr -C examples build
+        alr -C examples run
