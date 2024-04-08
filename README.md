@@ -1,5 +1,9 @@
 # Curve_Fit
 
+[![Build status](https://github.com/reznikmm/curve_fit/actions/workflows/alire.yml/badge.svg)](https://github.com/reznikmm/curve_fit/actions/workflows/alire.yml)
+[![Alire](https://img.shields.io/endpoint?url=https://alire.ada.dev/badges/curve_fit.json)](https://alire.ada.dev/crates/curve_fit.html)
+[![REUSE status](https://api.reuse.software/badge/github.com/reznikmm/curve_fit)](https://api.reuse.software/info/github.com/reznikmm/curve_fit)
+
 > Least squares fitting of quadratic curves and surfaces.
 
 This repository provides an Ada library for fitting quadratic curves and
