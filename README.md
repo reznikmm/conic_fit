@@ -40,7 +40,7 @@ procedure Main is
       (8.0, 4.0));
 
    Result : Curve_Fit.Ellipse.Parameters;
-   RSS    : Float;
+   RSS    : Float;  --  Residuals square sum
 begin
    Curve_Fit.Ellipse.Ellipse_Fit
      (Result  => Result,
@@ -48,7 +48,7 @@ begin
       Points  => Points,
       Initial => (2.0, 3.0, 0.3, 6.0, 3.0),
       Epsilon => 0.000_01);
-   
+
    Ada.Text_IO.Put_Line (Result'Image);
 end Main;
 ```

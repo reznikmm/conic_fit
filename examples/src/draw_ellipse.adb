@@ -10,6 +10,8 @@ with Ada.Text_IO;
 with Ada.Float_Text_IO;
 
 procedure Draw_Ellipse is
+   use all type Curve_Fit.Ellipse_Parameter_Index;
+
    Points : constant Curve_Fit.Ellipse.Vector_List :=
      [[1.0, 7.0],
       [2.0, 6.0],
@@ -52,26 +54,26 @@ begin
          Epsilon   => Float'Model_Epsilon,
          Max_Steps => Step);
 
-      Ada.Text_IO.Put (Image (Result (1)));  --  center x
+      Ada.Text_IO.Put (Image (Result (Center_X)));  --  center x
       Ada.Text_IO.Put ("+");
-      Ada.Text_IO.Put (Image (Result (4)));  --  a
+      Ada.Text_IO.Put (Image (Result (Semi_Major_Axis)));  --  a
       Ada.Text_IO.Put ("*cos(t)*cos(");
-      Ada.Text_IO.Put (Image (Result (3)));  --  tilt
+      Ada.Text_IO.Put (Image (Result (Tilt_Angle)));  --  tilt
       Ada.Text_IO.Put (")+");
-      Ada.Text_IO.Put (Image (Result (5)));  --  b
+      Ada.Text_IO.Put (Image (Result (Semi_Minor_Axis)));  --  b
       Ada.Text_IO.Put ("*sin(t)*sin(");
-      Ada.Text_IO.Put (Image (Result (3)));  --  tilt
+      Ada.Text_IO.Put (Image (Result (Tilt_Angle)));  --  tilt
       Ada.Text_IO.Put ("),");
 
-      Ada.Text_IO.Put (Image (Result (2)));  --  center y
+      Ada.Text_IO.Put (Image (Result (Center_Y)));  --  center y
       Ada.Text_IO.Put ("+");
-      Ada.Text_IO.Put (Image (Result (4)));  --  a
+      Ada.Text_IO.Put (Image (Result (Semi_Major_Axis)));  --  a
       Ada.Text_IO.Put ("*cos(t)*sin(");
-      Ada.Text_IO.Put (Image (Result (3)));  --  tilt
+      Ada.Text_IO.Put (Image (Result (Tilt_Angle)));  --  tilt
       Ada.Text_IO.Put (")+ -1*");
-      Ada.Text_IO.Put (Image (Result (5)));  --  b
+      Ada.Text_IO.Put (Image (Result (Semi_Minor_Axis)));  --  b
       Ada.Text_IO.Put ("*sin(t)*cos(");
-      Ada.Text_IO.Put (Image (Result (3)));  --  tilt
+      Ada.Text_IO.Put (Image (Result (Tilt_Angle)));  --  tilt
       Ada.Text_IO.Put (")");
       Ada.Text_IO.Put (" title ""Iter");
       Ada.Text_IO.Put (Step'Image);

@@ -66,7 +66,8 @@ package body Curve_Fit.Generic_Ellipse is
             --  u²/a² + v²/b² < 1
 
             J_T : Matrix_T;
-            M   : Matrix (1 .. 5, 1 .. 5) := [others => [others => Zero]];
+            M   : Matrix (Matrix_T'Range (1), Matrix_T'Range (1)) :=
+              [others => [others => Zero]];
 
             Residuals : Vector (Points'Range);
          begin
@@ -148,10 +149,10 @@ package body Curve_Fit.Generic_Ellipse is
             J_T := M * J_T;
 
             declare
-               D : constant Parameters := Parameters (J_T * Residuals);
+               D : constant Vector (Matrix_T'Range (1)) := J_T * Residuals;
             begin
                for J in D'Range loop
-                  Result (J) := @ - D (J);
+                  Result (Ellipse_Parameter_Index'Val (J - 1)) := @ - D (J);
                end loop;
             end;
 

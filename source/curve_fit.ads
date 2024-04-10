@@ -6,12 +6,12 @@
 package Curve_Fit is
    pragma Pure;
 
-   type Geometric_Parameter_Index is new Integer range 1 .. 5;
-   Center_X        : constant Geometric_Parameter_Index := 1;  --  x₀
-   Center_Y        : constant Geometric_Parameter_Index := 2;  --  y₀
-   Tilt_Angle      : constant Geometric_Parameter_Index := 3;  --  θ
-   Semi_Major_Axis : constant Geometric_Parameter_Index := 4;  --  a
-   Semi_Minor_Axis : constant Geometric_Parameter_Index := 5;  --  b
+   type Geometric_Parameter_Index is
+     (Center_X,          --  x₀
+      Center_Y,          --  y₀
+      Tilt_Angle,        --  θ
+      Semi_Major_Axis,   --  a
+      Semi_Minor_Axis);  --  b
 
    --  Ellipse canonical equation:
    --
