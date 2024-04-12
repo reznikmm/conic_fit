@@ -10,7 +10,7 @@ with Ada.Text_IO;
 with Ada.Float_Text_IO;
 
 procedure Fitting_Ellipse is
-   use all type Curve_Fit.Geometric_Parameter_Index;
+   use all type Curve_Fit.Ellipse_Geometric_Parameter_Index;
 
    Points : constant Curve_Fit.Ellipse.Vector_List :=
      [[1.0, 7.0],

@@ -17,6 +17,10 @@ package body Curve_Fit.Generic_Ellipse is
    function "**" (L : Number; R : Small_Int) return Number;
    function "*" (L : Small_Int; R : Number) return Number;
 
+   ---------
+   -- "*" --
+   ---------
+
    function "*" (L : Small_Int; R : Number) return Number is
       R_2 : constant Number := R + R;
    begin
@@ -47,7 +51,7 @@ package body Curve_Fit.Generic_Ellipse is
    is
       subtype Matrix_T is Matrix (1 .. 5, Points'Range);
 
-      Frame   : Frame_Parameters renames Result (Frame_Parameter_Index);
+      Frame   : Frame_Parameters renames Result (Frame_Parameters'Range);
       Ellipse : Ellipse_Parameters renames Result (Ellipse_Parameter_Index);
    begin
       Result := Initial;
@@ -193,8 +197,8 @@ package body Curve_Fit.Generic_Ellipse is
       end F;
 
       function DF (T : Number) return Number is
-         P1    : constant Number := 2 * (A * U) ** 2 / (T + A ** 2) ** 3;
-         P2    : constant Number := 2 * (B * V) ** 2 / (T + B ** 2) ** 3;
+         P1 : constant Number := 2 * (A * U) ** 2 / (T + A ** 2) ** 3;
+         P2 : constant Number := 2 * (B * V) ** 2 / (T + B ** 2) ** 3;
       begin
          return -P1 - P2;
       end DF;

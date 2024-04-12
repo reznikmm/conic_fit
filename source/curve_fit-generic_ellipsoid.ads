@@ -28,37 +28,37 @@ generic
 
    with function Inverse (M : Matrix) return Matrix is <>;
 
-package Curve_Fit.Generic_Ellipse is
+package Curve_Fit.Generic_Ellipsoid is
    pragma Pure;
 
-   type Vector_2D is array (1 .. 2) of Number;
+   type Vector_3D is array (1 .. 3) of Number;
 
-   function "+" (L, R : Vector_2D) return Vector_2D;
+   function "+" (L, R : Vector_3D) return Vector_3D;
 
-   function "-" (L, R : Vector_2D) return Vector_2D;
+   function "-" (L, R : Vector_3D) return Vector_3D;
 
    type Parameter_Array is
-     array (Ellipse_Geometric_Parameter_Index range <>) of Number;
+     array (Ellipsoid_Geometric_Parameter_Index range <>) of Number;
 
-   subtype Frame_Parameters is Parameter_Array (Center_X .. Tilt_Angle);
+   subtype Frame_Parameters is Parameter_Array (Center_X .. Yaw);
 
    function To_Canonical_Frame
-     (V : Vector_2D; P : Frame_Parameters) return Vector_2D;
+     (V : Vector_3D; P : Frame_Parameters) return Vector_3D;
 
    function From_Canonical_Frame
-     (V : Vector_2D; P : Frame_Parameters) return Vector_2D;
+     (V : Vector_3D; P : Frame_Parameters) return Vector_3D;
 
-   subtype Ellipse_Parameters is Parameter_Array (Ellipse_Parameter_Index);
+   subtype Ellipsoid_Parameters is Parameter_Array (Ellipsoid_Parameter_Index);
 
-   function Ellipse_Projection
-     (Point      : Vector_2D;
-      Parameters : Ellipse_Parameters;
-      Epsilon    : Number) return Vector_2D;
+   function Ellipsoid_Projection
+     (Point      : Vector_3D;
+      Parameters : Ellipsoid_Parameters;
+      Epsilon    : Number) return Vector_3D;
 
-   subtype Parameters is Parameter_Array (Ellipse_Geometric_Parameter_Index);
-   type Vector_List is array (Positive range <>) of Vector_2D;
+   subtype Parameters is Parameter_Array (Ellipsoid_Geometric_Parameter_Index);
+   type Vector_List is array (Positive range <>) of Vector_3D;
 
-   procedure Ellipse_Fit
+   procedure Ellipsoid_Fit
      (Result    : out Parameters;
       RSS       : out Number;
       Points    : Vector_List;
@@ -68,13 +68,13 @@ package Curve_Fit.Generic_Ellipse is
 
 private
 
-   function "+" (L, R : Vector_2D) return Vector_2D is
-     [L (1) + R (1), L (2) + R (2)];
+   function "+" (L, R : Vector_3D) return Vector_3D is
+     [L (1) + R (1), L (2) + R (2), L (3) + R (3)];
 
-   function "-" (L, R : Vector_2D) return Vector_2D is
-     [L (1) - R (1), L (2) - R (2)];
+   function "-" (L, R : Vector_3D) return Vector_3D is
+     [L (1) - R (1), L (2) - R (2), L (3) - R (3)];
 
-   function Center (P : Frame_Parameters) return Vector_2D is
-     [P (Center_X), P (Center_Y)];
+   function Center (P : Frame_Parameters) return Vector_3D is
+     [P (Center_X), P (Center_Y), P (Center_Z)];
 
-end Curve_Fit.Generic_Ellipse;
+end Curve_Fit.Generic_Ellipsoid;

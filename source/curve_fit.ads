@@ -6,7 +6,7 @@
 package Curve_Fit is
    pragma Pure;
 
-   type Geometric_Parameter_Index is
+   type Ellipse_Geometric_Parameter_Index is
      (Center_X,          --  x₀
       Center_Y,          --  y₀
       Tilt_Angle,        --  θ
@@ -24,10 +24,41 @@ package Curve_Fit is
    --   y̆ = -(x-x₀)sin θ + (y-y₀)cos θ
    --
 
-   subtype Frame_Parameter_Index is Geometric_Parameter_Index range
-     Center_X .. Tilt_Angle;
-
-   subtype Ellipse_Parameter_Index is Geometric_Parameter_Index range
+   subtype Ellipse_Parameter_Index is Ellipse_Geometric_Parameter_Index range
      Semi_Major_Axis .. Semi_Minor_Axis;
+
+   type Ellipsoid_Geometric_Parameter_Index is
+     (Center_X,          --  x₀
+      Center_Y,          --  y₀
+      Center_Z,          --  z₀
+      Roll,              --  α
+      Pitch,             --  β
+      Yaw,               --  γ
+      Semi_Major_Axis,   --  a
+      Semi_Middle_Axis,  --  b
+      Semi_Minor_Axis);  --  c
+
+   --  Ellipse canonical equation:
+   --
+   --   x̆²    y̆²    z̆²
+   --  --- + --- + --- = 1
+   --   a²    b²    c²
+   --
+   --  translated and rotated with
+   --
+   --   x̆ =  (x-x₀)⁢cos β⁢cos γ - (y-y₀)cos β⁢sin γ + (z-z₀)⁢sin β⁢
+   --
+   --   y̆ =  (x-x₀)⁢(⁢cos α⁢sin γ + sin α⁢sin β⁢cos γ))
+   --      + (y-y₀)(cos α⁢cos γ - sin α⁢sin β⁢sin γ))
+   --      - (z-z₀)⁢sin α⁢cos β
+   --
+   --   z̆ =  (x-x₀)⁢(⁢sin α⁢sin γ - cos α⁢sin β⁢cos γ))
+   --      + (y-y₀)(sin α⁢cos γ + cos α⁢sin β⁢sin γ))
+   --      + (z-z₀)⁢cos α⁢cos β
+   --
+
+   subtype Ellipsoid_Parameter_Index is
+     Ellipsoid_Geometric_Parameter_Index range
+       Semi_Major_Axis .. Semi_Minor_Axis;
 
 end Curve_Fit;
