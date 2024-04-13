@@ -55,7 +55,7 @@ package body Curve_Fit.Generic_Ellipsoid is
       P1    : Number;
       Copy  : Parameters := R;
    begin
-      Copy (P) := @ + One / ((3 * One) ** 2) ** 2;
+      Copy (P) := @ + One / ((2 * (3 * One)) ** 2) ** 2;
       P1 := F (To_Canonical_Frame (V, Copy (Frame_Parameters'Range)), Copy);
       return (P0 - P1) / (R (P) - Copy (P));
    end dP;
@@ -74,9 +74,40 @@ package body Curve_Fit.Generic_Ellipsoid is
    is
       subtype Matrix_T is Matrix (1 .. 9, Points'Range);
 
+      function Find_RSS (Copy : Parameters) return Number is
+         Frame     : Frame_Parameters renames Copy (Frame_Parameters'Range);
+         Ellipsoid : Ellipsoid_Parameters renames
+           Copy (Ellipsoid_Parameter_Index);
+
+         Total : Number := Zero;
+      begin
+         --  Build Residuals
+         for K in Points'Range loop
+            declare
+               P  : constant Vector_3D := Points (K);
+               CP : constant Vector_3D := To_Canonical_Frame (P, Frame);
+
+               UVW : constant Vector_3D :=
+                 Ellipsoid_Projection (CP, Ellipsoid, Epsilon);
+
+               Pr : constant Vector_3D := From_Canonical_Frame (UVW, Frame);
+               RV : constant Vector_3D := P - Pr;
+               --  Residual vector
+
+               Residual : Number;
+            begin
+               Residual := Sqrt (RV (1) ** 2 + RV (2) ** 2 + RV (3) ** 2);
+               Total := @ + Residual ** 2;
+            end;
+         end loop;
+
+         return Total;
+      end Find_RSS;
+
       Frame   : Frame_Parameters renames Result (Frame_Parameters'Range);
       Ellipsoid : Ellipsoid_Parameters renames
         Result (Ellipsoid_Parameter_Index);
+
    begin
       Result := Initial;
       RSS := -One;
@@ -102,6 +133,8 @@ package body Curve_Fit.Generic_Ellipsoid is
               [others => [others => Zero]];
 
             Residuals : Vector (Points'Range);
+            Change    : Vector (Matrix_T'Range (1));
+            Scale     : Number := One;
          begin
             --  Build J_T and Residuals
             for K in Points'Range loop
@@ -141,7 +174,7 @@ package body Curve_Fit.Generic_Ellipsoid is
                   --  ∂P / ∂z
 
                   XYZ   : constant Number :=
-                    Sqrt (dP_dx ** 2 + dP_dy ** 2 + dP_dy ** 2);
+                    Sqrt (dP_dx ** 2 + dP_dy ** 2 + dP_dz ** 2);
                   --  Sqrt (dP_dx² + dP_dy² + dP_dz²)
 
                   dP_dx0 : constant Number := -dP_dx;
@@ -166,8 +199,8 @@ package body Curve_Fit.Generic_Ellipsoid is
 
                   dP_dpitch : constant Number :=
                     2 * U / A ** 2 *
-                      (CX * (-Sin_B * Cos_C)
-                       + CY * (Sin_B * Sin_C)
+                      (-CX * Sin_B * Cos_C
+                       + CY * Sin_B * Sin_C
                        + CZ * Cos_B) +
                     2 * V / B ** 2 *
                       (CX * (Sin_A * Cos_B * Cos_C)
@@ -200,7 +233,8 @@ package body Curve_Fit.Generic_Ellipsoid is
                   dP_dc : constant Number := -(2 * W ** 2 / C ** 3);
                   --  ∂P / ∂c
 
-                  RV : constant Vector_3D := P - Pr;
+                  RV    : constant Vector_3D := P - Pr;
+                  --  Residual vector
                begin
                   J_T (1, K) := dP_dx0 / XYZ;
                   J_T (2, K) := dP_dy0 / XYZ;
@@ -252,21 +286,50 @@ package body Curve_Fit.Generic_Ellipsoid is
 
             J_T := M * J_T;
 
-            declare
-               D : constant Vector (Matrix_T'Range (1)) := J_T * Residuals;
-            begin
-               for J in D'Range loop
-                  Result (Ellipsoid_Parameter_Index'Val (J - 1)) := @ - D (J);
-               end loop;
-            end;
+            if Step = 1 then
+               RSS := [for R of Residuals => R ** 2]'Reduce ("+", Zero);
+            end if;
 
-            declare
-               Next_RSS : constant Number :=
-                 [for R of Residuals => R ** 2]'Reduce ("+", Zero);
-            begin
-               exit when abs (RSS - Next_RSS) < Epsilon;
-               RSS := Next_RSS;
-            end;
+            Change := J_T * Residuals;
+
+            for J in 1 .. 10 loop
+               declare
+                  function "+" (J : Positive)
+                    return Ellipsoid_Geometric_Parameter_Index
+                      is (Ellipsoid_Geometric_Parameter_Index'Val (J - 1));
+
+                  Copy : Parameters := Result;
+                  Next_RSS : Number;
+               begin
+                  for J in Change'Range loop
+                     Copy (+J) := @ - Scale * Change (J);
+                  end loop;
+
+                  if Zero < Copy (Semi_Major_Axis) and then
+                    Copy (Semi_Middle_Axis) < Copy (Semi_Major_Axis) and then
+                    Copy (Semi_Minor_Axis) < Copy (Semi_Middle_Axis) and then
+                    abs (Result (Roll) - Copy (Roll)) < One and then
+                    abs (Result (Pitch) - Copy (Pitch)) < One and then
+                    abs (Result (Yaw) - Copy (Yaw)) < One
+                  then
+                     Next_RSS := Find_RSS (Copy);
+
+                     if Next_RSS < RSS then
+                        Result := Copy;
+
+                        if abs (RSS - Next_RSS) < Epsilon then
+                           RSS := Next_RSS;
+                           return;
+                        end if;
+
+                        RSS := Next_RSS;
+                        exit;
+                     end if;
+                  end if;
+
+                  Scale := Scale / (One + One);
+               end;
+            end loop;
          end;
       end loop;
    end Ellipsoid_Fit;

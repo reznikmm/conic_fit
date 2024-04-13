@@ -6,22 +6,21 @@ pragma Ada_2022;
 pragma Assertion_Policy (Check);
 
 with Ada.Numerics.Elementary_Functions;
-with Ada.Numerics.Float_Random;
 
 with Curve_Fit.Ellipsoid;
 with Ada.Text_IO;
 with Ada.Float_Text_IO;
 
+with PLY;
+
 procedure Fitting_Ellipsoid is
    use Ada.Numerics.Elementary_Functions;
    use all type Curve_Fit.Ellipsoid_Geometric_Parameter_Index;
 
-   G : Ada.Numerics.Float_Random.Generator;
-
    function To_Point (A, B : Float) return Curve_Fit.Ellipsoid.Vector_3D is
-     (30.0 * Cos (A) * Cos (B) + Ada.Numerics.Float_Random.Random (G),
-      20.0 * Sin (A) * Cos (B) + Ada.Numerics.Float_Random.Random (G),
-      10.0 * Sin (B) + Ada.Numerics.Float_Random.Random (G));
+     (10.0 * Cos (A) * Cos (B) + Sin (A + 10.0 * B),
+      8.0 * Sin (A) * Cos (B) + Sin (10.0 * A + B),
+      6.0 * Sin (B) + Sin (5.0 * A + 3.0 * B));
 
    Params : constant Curve_Fit.Ellipsoid.Frame_Parameters :=
      (Center_X => 1.0,
@@ -32,9 +31,9 @@ procedure Fitting_Ellipsoid is
       Yaw      => 0.9);
 
    Points : constant Curve_Fit.Ellipsoid.Vector_List :=
-     (for J in 1 .. 30 =>
+     (for J in 1 .. 100 =>
         Curve_Fit.Ellipsoid.From_Canonical_Frame
-          (To_Point (11.0 * Float (J), 3.0 * Float (J)), Params));
+          (To_Point (2.0 * Float (J), 101.0 * Float (J)), Params));
 
    function Image (F : Float) return String;
 
@@ -71,16 +70,54 @@ begin
      (Result  => Result,
       RSS     => RSS,
       Points  => Points,
-      Initial => (0.0, 1.9, 0.0, 0.2, 0.3, 0.5, 33.0, 11.0, 7.0),
+      Initial => (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 15.0, 6.0, 1.0),
       Epsilon => Float'Model_Epsilon);
 
    for J in Result'Range loop
       Ada.Text_IO.Put (J'Image);
       Ada.Text_IO.Put (":");
-      Ada.Text_IO.Put_Line (Image (Result (J)));
+      Ada.Float_Text_IO.Put (Result (J), Aft => 5, Exp => 0);
+      Ada.Text_IO.New_Line;
    end loop;
 
-   Ada.Text_IO.Put_Line ("RSS:" & Image (RSS));
+   Ada.Text_IO.Put_Line ("RSS:");
+   Ada.Float_Text_IO.Put (RSS);
+   Ada.Text_IO.New_Line;
+
+   declare
+      use type Curve_Fit.Ellipsoid.Vector_3D;
+      Frame     : Curve_Fit.Ellipsoid.Frame_Parameters renames
+        Result (Curve_Fit.Ellipsoid.Frame_Parameters'Range);
+      Ellipsoid : Curve_Fit.Ellipsoid.Ellipsoid_Parameters renames
+        Result (Curve_Fit.Ellipsoid.Ellipsoid_Parameters'Range);
+
+      B : Curve_Fit.Ellipsoid.Vector_3D;
+   begin
+      for P of Points loop
+         B := Curve_Fit.Ellipsoid.From_Canonical_Frame
+           (Curve_Fit.Ellipsoid.Ellipsoid_Projection
+              (Curve_Fit.Ellipsoid.To_Canonical_Frame (P, Frame),
+               Ellipsoid,
+               0.0001),
+            Frame);
+
+         PLY.Append_Face
+           ([PLY.Point (P),
+             PLY.Point (B + [0.05, 0.0, 0.0]),
+             PLY.Point (B + [0.0, 0.05, 0.0])]);
+         PLY.Append_Face
+           ([PLY.Point (P),
+             PLY.Point (B + [0.0, 0.05, 0.0]),
+             PLY.Point (B + [0.0, 0.0, 0.05])]);
+         PLY.Append_Face
+           ([PLY.Point (P),
+             PLY.Point (B + [0.0, 0.0, 0.05]),
+             PLY.Point (B + [0.05, 0.0, 0.0])]);
+      end loop;
+
+      PLY.Write (Scale => 0.1);
+   end;
+
 
    --  pragma Assert (Image (Result (Center_X)) = " 2.6996");
    --  pragma Assert (Image (Result (Center_Y)) = " 3.8160");

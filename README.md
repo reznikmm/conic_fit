@@ -10,9 +10,13 @@ This repository provides an Ada library for fitting quadratic curves and
 surfaces to data points using the least squares method described in the paper
 "Least squares fitting of quadratic curves and surfaces" by N. Chernov and H. Ma.
 
-Currently only ellipse fitting is implemented.
+Currently only we implemented :
+### Ellipse fitting:
 
 ![Ellipse fitting demo](ellipse.png)
+
+### Ellipsoid fitting:
+![Ellipsoid fitting demo](ellipsoid.png)
 
 ## Installation
 
