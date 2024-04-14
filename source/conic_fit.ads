@@ -61,4 +61,10 @@ package Conic_Fit is
      Ellipsoid_Geometric_Parameter_Index range
        Semi_Major_Axis .. Semi_Minor_Axis;
 
+   type Sphere_Geometric_Parameter_Index is
+     (Center_X, --  x₀
+      Center_Y, --  y₀
+      Center_Z, --  z₀
+      Radius);  --  r
+
 end Conic_Fit;

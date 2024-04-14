@@ -18,6 +18,10 @@ Currently only we implemented :
 ### Ellipsoid fitting:
 ![Ellipsoid fitting demo](ellipsoid.png)
 
+### Sphere fitting
+
+Demo TBD
+
 ## Installation
 
 Use Alire to install and compile the library:
