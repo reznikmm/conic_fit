@@ -1,4 +1,4 @@
-name = "curve_fit"
+name = "conic_fit"
 description = "Least squares fitting of quadratic curves and surfaces"
 version = "0.1.0-dev"
 
@@ -6,9 +6,9 @@ authors = ["Max Reznik"]
 maintainers = ["Max Reznik <reznikmm@gmail.com>"]
 maintainers-logins = ["reznikmm"]
 licenses = "MIT OR Apache-2.0 WITH LLVM-exception"
-website = "https://github.com/reznikmm/curve_fit"
+website = "https://github.com/reznikmm/conic_fit"
 tags = ["ellipse", "fitting", "projection"]
-project-files = ["gnat/curve_fit.gpr"]
+project-files = ["gnat/conic_fit.gpr"]
 
 [configuration]
 output_dir = "gnat"

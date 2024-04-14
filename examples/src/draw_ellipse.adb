@@ -5,14 +5,14 @@
 pragma Ada_2022;
 pragma Assertion_Policy (Check);
 
-with Curve_Fit.Ellipse;
+with Conic_Fit.Ellipse;
 with Ada.Text_IO;
 with Ada.Float_Text_IO;
 
 procedure Draw_Ellipse is
-   use all type Curve_Fit.Ellipse_Parameter_Index;
+   use all type Conic_Fit.Ellipse_Parameter_Index;
 
-   Points : constant Curve_Fit.Ellipse.Vector_List :=
+   Points : constant Conic_Fit.Ellipse.Vector_List :=
      [[1.0, 7.0],
       [2.0, 6.0],
       [5.0, 8.0],
@@ -32,7 +32,7 @@ procedure Draw_Ellipse is
    end Image;
 
    Output : Ada.Text_IO.File_Type;
-   Result : Curve_Fit.Ellipse.Parameters;
+   Result : Conic_Fit.Ellipse.Parameters;
    RSS    : Float;
 begin
    Ada.Text_IO.Create (Output, Name => "ellipse.gnuplot");
@@ -46,7 +46,7 @@ begin
    Ada.Text_IO.Put ("plot");
 
    for Step in 1 .. 5 loop
-      Curve_Fit.Ellipse.Ellipse_Fit
+      Conic_Fit.Ellipse.Ellipse_Fit
         (Result  => Result,
          RSS     => RSS,
          Points  => Points,

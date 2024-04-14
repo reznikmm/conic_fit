@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 
 name = "examples"
-description = "Curve_Fit examples"
+description = "Conic_Fit examples"
 version = "0.1.0-dev"
 
 authors = ["Max Reznik"]
@@ -26,11 +26,11 @@ development.contracts = "Yes"
 "*".ada_version = "Ada2022"
 
 [build-profiles]
-curve_fit = "development"
+conic_fit = "development"
 
 [[depends-on]]
-curve_fit = "*"
+conic_fit = "*"
 
 [[pins]]
-curve_fit = { path='..' }
+conic_fit = { path='..' }
 

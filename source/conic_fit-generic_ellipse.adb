@@ -3,7 +3,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
-package body Curve_Fit.Generic_Ellipse is
+package body Conic_Fit.Generic_Ellipse is
 
    function Zero return Number is (One - One);
 
@@ -278,4 +278,4 @@ package body Curve_Fit.Generic_Ellipse is
                    R (1) * Sin (P (Tilt_Angle))];
    end To_Canonical_Frame;
 
-end Curve_Fit.Generic_Ellipse;
+end Conic_Fit.Generic_Ellipse;

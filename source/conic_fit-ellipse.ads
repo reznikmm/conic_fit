@@ -9,12 +9,12 @@ with Ada.Numerics.Real_Arrays;
 use Ada.Numerics.Elementary_Functions;
 use Ada.Numerics.Real_Arrays;
 
-with Curve_Fit.Generic_Ellipse;
+with Conic_Fit.Generic_Ellipse;
 
-package Curve_Fit.Ellipse is new Curve_Fit.Generic_Ellipse
+package Conic_Fit.Ellipse is new Conic_Fit.Generic_Ellipse
   (Number => Float,
    One    => 1.0,
    Matrix => Real_Matrix,
    Vector => Real_Vector);
 
-pragma Pure (Curve_Fit.Ellipse);
+pragma Pure (Conic_Fit.Ellipse);

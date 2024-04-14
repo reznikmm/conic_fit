@@ -3,7 +3,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
-package body Curve_Fit.Generic_Ellipsoid is
+package body Conic_Fit.Generic_Ellipsoid is
 
    function Zero return Number is (One - One);
 
@@ -466,4 +466,4 @@ package body Curve_Fit.Generic_Ellipsoid is
                  + R (3) * Cos (P (Roll)) * Cos (P (Pitch))];
    end To_Canonical_Frame;
 
-end Curve_Fit.Generic_Ellipsoid;
+end Conic_Fit.Generic_Ellipsoid;

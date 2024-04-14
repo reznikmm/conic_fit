@@ -3,7 +3,7 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
-package Curve_Fit is
+package Conic_Fit is
    pragma Pure;
 
    type Ellipse_Geometric_Parameter_Index is
@@ -61,4 +61,4 @@ package Curve_Fit is
      Ellipsoid_Geometric_Parameter_Index range
        Semi_Major_Axis .. Semi_Minor_Axis;
 
-end Curve_Fit;
+end Conic_Fit;

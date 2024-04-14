@@ -7,7 +7,7 @@ pragma Assertion_Policy (Check);
 
 with Ada.Numerics.Elementary_Functions;
 
-with Curve_Fit.Ellipsoid;
+with Conic_Fit.Ellipsoid;
 with Ada.Text_IO;
 with Ada.Float_Text_IO;
 
@@ -15,14 +15,14 @@ with PLY;
 
 procedure Fitting_Ellipsoid is
    use Ada.Numerics.Elementary_Functions;
-   use all type Curve_Fit.Ellipsoid_Geometric_Parameter_Index;
+   use all type Conic_Fit.Ellipsoid_Geometric_Parameter_Index;
 
-   function To_Point (A, B : Float) return Curve_Fit.Ellipsoid.Vector_3D is
+   function To_Point (A, B : Float) return Conic_Fit.Ellipsoid.Vector_3D is
      (10.0 * Cos (A) * Cos (B) + Sin (A + 10.0 * B),
       8.0 * Sin (A) * Cos (B) + Sin (10.0 * A + B),
       6.0 * Sin (B) + Sin (5.0 * A + 3.0 * B));
 
-   Params : constant Curve_Fit.Ellipsoid.Frame_Parameters :=
+   Params : constant Conic_Fit.Ellipsoid.Frame_Parameters :=
      (Center_X => 1.0,
       Center_Y => 2.0,
       Center_Z => 3.0,
@@ -30,9 +30,9 @@ procedure Fitting_Ellipsoid is
       Pitch    => 0.7,
       Yaw      => 0.9);
 
-   Points : constant Curve_Fit.Ellipsoid.Vector_List :=
+   Points : constant Conic_Fit.Ellipsoid.Vector_List :=
      (for J in 1 .. 100 =>
-        Curve_Fit.Ellipsoid.From_Canonical_Frame
+        Conic_Fit.Ellipsoid.From_Canonical_Frame
           (To_Point (2.0 * Float (J), 101.0 * Float (J)), Params));
 
    function Image (F : Float) return String;
@@ -44,19 +44,19 @@ procedure Fitting_Ellipsoid is
       return Result;
    end Image;
 
-   Result : Curve_Fit.Ellipsoid.Parameters;
+   Result : Conic_Fit.Ellipsoid.Parameters;
    RSS    : Float;
 begin
    Ada.Text_IO.Put_Line ("Fitting an ellipsoid:");
 
    for P of Points loop
       declare
-         use Curve_Fit.Ellipsoid;
-         T : constant Curve_Fit.Ellipsoid.Vector_3D :=
-           Curve_Fit.Ellipsoid.To_Canonical_Frame (P, Params);
-         R : constant Curve_Fit.Ellipsoid.Vector_3D :=
-           Curve_Fit.Ellipsoid.From_Canonical_Frame (T, Params);
-         D : constant Curve_Fit.Ellipsoid.Vector_3D := R - P;
+         use Conic_Fit.Ellipsoid;
+         T : constant Conic_Fit.Ellipsoid.Vector_3D :=
+           Conic_Fit.Ellipsoid.To_Canonical_Frame (P, Params);
+         R : constant Conic_Fit.Ellipsoid.Vector_3D :=
+           Conic_Fit.Ellipsoid.From_Canonical_Frame (T, Params);
+         D : constant Conic_Fit.Ellipsoid.Vector_3D := R - P;
          Sum : Float := 0.0;
       begin
          for X of D loop
@@ -66,7 +66,7 @@ begin
       end;
    end loop;
 
-   Curve_Fit.Ellipsoid.Ellipsoid_Fit
+   Conic_Fit.Ellipsoid.Ellipsoid_Fit
      (Result  => Result,
       RSS     => RSS,
       Points  => Points,
@@ -85,18 +85,18 @@ begin
    Ada.Text_IO.New_Line;
 
    declare
-      use type Curve_Fit.Ellipsoid.Vector_3D;
-      Frame     : Curve_Fit.Ellipsoid.Frame_Parameters renames
-        Result (Curve_Fit.Ellipsoid.Frame_Parameters'Range);
-      Ellipsoid : Curve_Fit.Ellipsoid.Ellipsoid_Parameters renames
-        Result (Curve_Fit.Ellipsoid.Ellipsoid_Parameters'Range);
+      use type Conic_Fit.Ellipsoid.Vector_3D;
+      Frame     : Conic_Fit.Ellipsoid.Frame_Parameters renames
+        Result (Conic_Fit.Ellipsoid.Frame_Parameters'Range);
+      Ellipsoid : Conic_Fit.Ellipsoid.Ellipsoid_Parameters renames
+        Result (Conic_Fit.Ellipsoid.Ellipsoid_Parameters'Range);
 
-      B : Curve_Fit.Ellipsoid.Vector_3D;
+      B : Conic_Fit.Ellipsoid.Vector_3D;
    begin
       for P of Points loop
-         B := Curve_Fit.Ellipsoid.From_Canonical_Frame
-           (Curve_Fit.Ellipsoid.Ellipsoid_Projection
-              (Curve_Fit.Ellipsoid.To_Canonical_Frame (P, Frame),
+         B := Conic_Fit.Ellipsoid.From_Canonical_Frame
+           (Conic_Fit.Ellipsoid.Ellipsoid_Projection
+              (Conic_Fit.Ellipsoid.To_Canonical_Frame (P, Frame),
                Ellipsoid,
                0.0001),
             Frame);

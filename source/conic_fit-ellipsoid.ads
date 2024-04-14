@@ -9,12 +9,12 @@ with Ada.Numerics.Real_Arrays;
 use Ada.Numerics.Elementary_Functions;
 use Ada.Numerics.Real_Arrays;
 
-with Curve_Fit.Generic_Ellipsoid;
+with Conic_Fit.Generic_Ellipsoid;
 
-package Curve_Fit.Ellipsoid is new Curve_Fit.Generic_Ellipsoid
+package Conic_Fit.Ellipsoid is new Conic_Fit.Generic_Ellipsoid
   (Number => Float,
    One    => 1.0,
    Matrix => Real_Matrix,
    Vector => Real_Vector);
 
-pragma Pure (Curve_Fit.Ellipsoid);
+pragma Pure (Conic_Fit.Ellipsoid);
