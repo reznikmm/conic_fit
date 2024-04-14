@@ -37,29 +37,6 @@ package body Conic_Fit.Generic_Ellipsoid is
       return (if R = 2 then L_2 else L_2 * L);
    end "**";
 
-   function dP
-     (V : Vector_3D;
-      R : Parameters;
-      P : Ellipsoid_Geometric_Parameter_Index) return Number
-   is
-      function F
-        (CP : Vector_3D;
-         R  : Parameters) return Number is
-          (CP (1) ** 2 / R (Semi_Major_Axis) ** 2 +
-           CP (2) ** 2 / R (Semi_Middle_Axis) ** 2 +
-           CP (3) ** 2 / R (Semi_Minor_Axis) ** 2 - One);
-
-      Frame : Frame_Parameters renames R (Frame_Parameters'Range);
-
-      P0    : constant Number := F (To_Canonical_Frame (V, Frame), R);
-      P1    : Number;
-      Copy  : Parameters := R;
-   begin
-      Copy (P) := @ + One / ((2 * (3 * One)) ** 2) ** 2;
-      P1 := F (To_Canonical_Frame (V, Copy (Frame_Parameters'Range)), Copy);
-      return (P0 - P1) / (R (P) - Copy (P));
-   end dP;
-
    -----------------
    -- Ellipsoid_Fit --
    -----------------
@@ -73,6 +50,8 @@ package body Conic_Fit.Generic_Ellipsoid is
       Max_Steps : Positive := 50)
    is
       subtype Matrix_T is Matrix (1 .. 9, Points'Range);
+
+      function Find_RSS (Copy : Parameters) return Number;
 
       function Find_RSS (Copy : Parameters) return Number is
          Frame     : Frame_Parameters renames Copy (Frame_Parameters'Range);
@@ -245,19 +224,6 @@ package body Conic_Fit.Generic_Ellipsoid is
                   J_T (7, K) := dP_da / XYZ;
                   J_T (8, K) := dP_db / XYZ;
                   J_T (9, K) := dP_dc / XYZ;
-
-                  for Ppp in Ellipsoid_Geometric_Parameter_Index loop
-                     declare
-                        Exp : Number := dP (Pr, Result, Ppp);
-                        Got : constant Number := J_T
-                          (1 + Ellipsoid_Geometric_Parameter_Index'Pos (Ppp),
-                           K);
-                     begin
-                        if Exp < Zero xor Got < Zero then
-                           Exp := Zero;
-                        end if;
-                     end;
-                  end loop;
 
                   Residuals (K) :=
                     Sqrt (RV (1) ** 2 + RV (2) ** 2 + RV (3) ** 2);
