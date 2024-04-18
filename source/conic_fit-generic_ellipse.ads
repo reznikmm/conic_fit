@@ -31,7 +31,7 @@ generic
 package Conic_Fit.Generic_Ellipse is
    pragma Pure;
 
-   type Vector_2D is array (1 .. 2) of Number;
+   subtype Vector_2D is Vector (1 .. 2);
 
    function "+" (L, R : Vector_2D) return Vector_2D;
 

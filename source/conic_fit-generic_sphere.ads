@@ -24,7 +24,7 @@ generic
 package Conic_Fit.Generic_Sphere is
    pragma Pure;
 
-   type Vector_3D is array (1 .. 3) of Number;
+   subtype Vector_3D is Vector (1 .. 3);
 
    type Parameters is
      array (Sphere_Geometric_Parameter_Index) of Number;

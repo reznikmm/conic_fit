@@ -31,7 +31,7 @@ generic
 package Conic_Fit.Generic_Ellipsoid is
    pragma Pure;
 
-   type Vector_3D is array (1 .. 3) of Number;
+   subtype Vector_3D is Vector (1 .. 3);
 
    function "+" (L, R : Vector_3D) return Vector_3D;
 
