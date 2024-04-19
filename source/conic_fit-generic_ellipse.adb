@@ -44,7 +44,7 @@ package body Conic_Fit.Generic_Ellipse is
    procedure Ellipse_Fit
      (Result    : out Parameters;
       RSS       : out Number;
-      Points    : Vector_List;
+      Points    : Vector_Array;
       Initial   : Parameters;
       Epsilon   : Number;
       Max_Steps : Positive := 50)

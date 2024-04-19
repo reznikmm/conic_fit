@@ -18,59 +18,33 @@ procedure Fitting_Ellipsoid is
    use all type Conic_Fit.Ellipsoid_Geometric_Parameter_Index;
 
    function To_Point (A, B : Float) return Conic_Fit.Ellipsoid.Vector_3D is
-     (10.0 * Cos (A) * Cos (B) + Sin (A + 10.0 * B),
+     [10.0 * Cos (A) * Cos (B) + Sin (A + 10.0 * B),
       8.0 * Sin (A) * Cos (B) + Sin (10.0 * A + B),
-      6.0 * Sin (B) + Sin (5.0 * A + 3.0 * B));
+      6.0 * Sin (B) + Sin (5.0 * A + 3.0 * B)];
 
    Params : constant Conic_Fit.Ellipsoid.Frame_Parameters :=
-     (Center_X => 1.0,
+     [Center_X => 1.0,
       Center_Y => 2.0,
       Center_Z => 3.0,
       Roll     => 0.5,
       Pitch    => 0.7,
-      Yaw      => 0.9);
+      Yaw      => 0.9];
 
-   Points : constant Conic_Fit.Ellipsoid.Vector_List :=
-     (for J in 1 .. 100 =>
+   Points : constant Conic_Fit.Ellipsoid.Vector_Array :=
+     [for J in 1 .. 100 =>
         Conic_Fit.Ellipsoid.From_Canonical_Frame
-          (To_Point (2.0 * Float (J), 101.0 * Float (J)), Params));
-
-   function Image (F : Float) return String;
-
-   function Image (F : Float) return String is
-      Result : String (1 .. 7);
-   begin
-      Ada.Float_Text_IO.Put (Result, F, Aft => 4, Exp => 0);
-      return Result;
-   end Image;
+          (To_Point (2.0 * Float (J), 101.0 * Float (J)), Params)];
 
    Result : Conic_Fit.Ellipsoid.Parameters;
    RSS    : Float;
 begin
    Ada.Text_IO.Put_Line ("Fitting an ellipsoid:");
 
-   for P of Points loop
-      declare
-         use Conic_Fit.Ellipsoid;
-         T : constant Conic_Fit.Ellipsoid.Vector_3D :=
-           Conic_Fit.Ellipsoid.To_Canonical_Frame (P, Params);
-         R : constant Conic_Fit.Ellipsoid.Vector_3D :=
-           Conic_Fit.Ellipsoid.From_Canonical_Frame (T, Params);
-         D : constant Conic_Fit.Ellipsoid.Vector_3D := R - P;
-         Sum : Float := 0.0;
-      begin
-         for X of D loop
-            Sum := Sum + X ** 2;
-         end loop;
-         pragma Assert (Sum < 0.001);
-      end;
-   end loop;
-
    Conic_Fit.Ellipsoid.Ellipsoid_Fit
      (Result  => Result,
       RSS     => RSS,
       Points  => Points,
-      Initial => (0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 15.0, 6.0, 1.0),
+      Initial => [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 15.0, 6.0, 1.0],
       Epsilon => Float'Model_Epsilon);
 
    for J in Result'Range loop
@@ -102,17 +76,17 @@ begin
             Frame);
 
          PLY.Append_Face
-           ([PLY.Point (P),
-             PLY.Point (B + [0.05, 0.0, 0.0]),
-             PLY.Point (B + [0.0, 0.05, 0.0])]);
+           ([P,
+             B + [0.05, 0.0, 0.0],
+             B + [0.0, 0.05, 0.0]]);
          PLY.Append_Face
-           ([PLY.Point (P),
-             PLY.Point (B + [0.0, 0.05, 0.0]),
-             PLY.Point (B + [0.0, 0.0, 0.05])]);
+           ([P,
+             B + [0.0, 0.05, 0.0],
+             B + [0.0, 0.0, 0.05]]);
          PLY.Append_Face
-           ([PLY.Point (P),
-             PLY.Point (B + [0.0, 0.0, 0.05]),
-             PLY.Point (B + [0.05, 0.0, 0.0])]);
+           ([P,
+             B + [0.0, 0.0, 0.05],
+             B + [0.05, 0.0, 0.0]]);
       end loop;
 
       PLY.Write (Scale => 0.1);

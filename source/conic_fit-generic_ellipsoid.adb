@@ -17,6 +17,15 @@ package body Conic_Fit.Generic_Ellipsoid is
    function "**" (L : Number; R : Small_Int) return Number;
    function "*" (L : Small_Int; R : Number) return Number;
 
+   function "+" (L, R : Vector_3D) return Vector_3D is
+     [L (1) + R (1), L (2) + R (2), L (3) + R (3)];
+
+   function "-" (L, R : Vector_3D) return Vector_3D is
+     [L (1) - R (1), L (2) - R (2), L (3) - R (3)];
+
+   function Center (P : Frame_Parameters) return Vector_3D is
+     [P (Center_X), P (Center_Y), P (Center_Z)];
+
    ---------
    -- "*" --
    ---------
@@ -44,7 +53,7 @@ package body Conic_Fit.Generic_Ellipsoid is
    procedure Ellipsoid_Fit
      (Result    : out Parameters;
       RSS       : out Number;
-      Points    : Vector_List;
+      Points    : Vector_Array;
       Initial   : Parameters;
       Epsilon   : Number;
       Max_Steps : Positive := 50)

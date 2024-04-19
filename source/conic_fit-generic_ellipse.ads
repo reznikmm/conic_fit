@@ -5,6 +5,8 @@
 
 pragma Ada_2022;
 
+with Conic_Fit.Generic_Vectors;
+
 generic
    type Number is private;
 
@@ -28,10 +30,14 @@ generic
 
    with function Inverse (M : Matrix) return Matrix is <>;
 
+   with package Vectors is new
+     Conic_Fit.Generic_Vectors (Number, Vector);
+
 package Conic_Fit.Generic_Ellipse is
    pragma Pure;
 
-   subtype Vector_2D is Vector (1 .. 2);
+   subtype Vector_2D is Vectors.Vector_2D;
+   subtype Vector_Array is Vectors.Vector_2D_Array;
 
    function "+" (L, R : Vector_2D) return Vector_2D;
 
@@ -56,12 +62,11 @@ package Conic_Fit.Generic_Ellipse is
       Epsilon    : Number) return Vector_2D;
 
    subtype Parameters is Parameter_Array (Ellipse_Geometric_Parameter_Index);
-   type Vector_List is array (Positive range <>) of Vector_2D;
 
    procedure Ellipse_Fit
      (Result    : out Parameters;
       RSS       : out Number;
-      Points    : Vector_List;
+      Points    : Vector_Array;
       Initial   : Parameters;
       Epsilon   : Number;
       Max_Steps : Positive := 50);

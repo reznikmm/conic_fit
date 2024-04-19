@@ -5,6 +5,8 @@
 
 pragma Ada_2022;
 
+with Conic_Fit.Generic_Vectors;
+
 generic
    type Number is private;
 
@@ -28,14 +30,14 @@ generic
 
    with function Inverse (M : Matrix) return Matrix is <>;
 
+   with package Vectors is new
+     Conic_Fit.Generic_Vectors (Number, Vector);
+
 package Conic_Fit.Generic_Ellipsoid is
    pragma Pure;
 
-   subtype Vector_3D is Vector (1 .. 3);
-
-   function "+" (L, R : Vector_3D) return Vector_3D;
-
-   function "-" (L, R : Vector_3D) return Vector_3D;
+   subtype Vector_3D is Vectors.Vector_3D;
+   subtype Vector_Array is Vectors.Vector_3D_Array;
 
    type Parameter_Array is
      array (Ellipsoid_Geometric_Parameter_Index range <>) of Number;
@@ -56,25 +58,13 @@ package Conic_Fit.Generic_Ellipsoid is
       Epsilon    : Number) return Vector_3D;
 
    subtype Parameters is Parameter_Array (Ellipsoid_Geometric_Parameter_Index);
-   type Vector_List is array (Positive range <>) of Vector_3D;
 
    procedure Ellipsoid_Fit
      (Result    : out Parameters;
       RSS       : out Number;
-      Points    : Vector_List;
+      Points    : Vector_Array;
       Initial   : Parameters;
       Epsilon   : Number;
       Max_Steps : Positive := 50);
-
-private
-
-   function "+" (L, R : Vector_3D) return Vector_3D is
-     [L (1) + R (1), L (2) + R (2), L (3) + R (3)];
-
-   function "-" (L, R : Vector_3D) return Vector_3D is
-     [L (1) - R (1), L (2) - R (2), L (3) - R (3)];
-
-   function Center (P : Frame_Parameters) return Vector_3D is
-     [P (Center_X), P (Center_Y), P (Center_Z)];
 
 end Conic_Fit.Generic_Ellipsoid;

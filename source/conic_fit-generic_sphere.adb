@@ -18,7 +18,7 @@ package body Conic_Fit.Generic_Sphere is
 
    procedure Sphere_Fit
      (Result : out Parameters;
-      Points : Vector_List)
+      Points : Vector_Array)
    is
 
       function A (J, K : Positive) return Number is

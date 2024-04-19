@@ -12,7 +12,7 @@ with Ada.Float_Text_IO;
 procedure Fitting_Ellipse is
    use all type Conic_Fit.Ellipse_Geometric_Parameter_Index;
 
-   Points : constant Conic_Fit.Ellipse.Vector_List :=
+   Points : constant Conic_Fit.Ellipse.Vector_Array :=
      [[1.0, 7.0],
       [2.0, 6.0],
       [5.0, 8.0],
