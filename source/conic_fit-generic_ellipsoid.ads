@@ -25,9 +25,6 @@ generic
    type Matrix is array (Integer range <>, Integer range <>) of Number;
    type Vector is array (Integer range <>) of Number;
 
-   with function "*" (L, R : Matrix) return Matrix is <>;
-   with function "*" (L : Matrix; R : Vector) return Vector is <>;
-
    with function Inverse (M : Matrix) return Matrix is <>;
 
    with package Vectors is new

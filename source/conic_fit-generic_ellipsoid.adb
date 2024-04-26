@@ -3,9 +3,12 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
+with Ada.Unchecked_Deallocation;
+
 package body Conic_Fit.Generic_Ellipsoid is
 
    function Zero return Number is (One - One);
+   function Two return Number is (One + One);
 
    function "-" (L : Number) return Number is (Zero - L);
 
@@ -59,8 +62,45 @@ package body Conic_Fit.Generic_Ellipsoid is
       Max_Steps : Positive := 50)
    is
       subtype Matrix_T is Matrix (1 .. 9, Points'Range);
+      --  A type of the Jacobian matrix (transposed).
 
+      subtype Residual_Vector is Vector (Points'Range);
+
+      type Heap_Item is record
+         J_T       : Matrix_T;
+         Residuals : Residual_Vector;
+      end record;
+
+      type Heap_Item_Access is access Heap_Item;
+
+      procedure Free is new Ada.Unchecked_Deallocation
+        (Heap_Item, Heap_Item_Access);
+
+      subtype Mx9x9 is Matrix (Matrix_T'Range (1), Matrix_T'Range (1));
+      subtype Vx9 is Vector (Matrix_T'Range (1));
+
+      procedure MxJ (M : Mx9x9; J : in out Matrix_T);
+      --  Calculate J := M * J;
+
+      function "*" (J_T : Matrix_T; V : Vector) return Vx9;
       function Find_RSS (Copy : Parameters) return Number;
+
+      ---------
+      -- "*" --
+      ---------
+
+      function "*" (J_T : Matrix_T; V : Vector) return Vx9 is
+         function Cell (R : Positive) return Number;
+
+         function Cell (R : Positive) return Number is
+           ([for C in V'Range => J_T (R, C) * V (C)]'Reduce ("+", Zero));
+      begin
+         return [for R in Matrix_T'Range (1) => Cell (R)];
+      end "*";
+
+      --------------
+      -- Find_RSS --
+      --------------
 
       function Find_RSS (Copy : Parameters) return Number is
          Frame     : Frame_Parameters renames Copy (Frame_Parameters'Range);
@@ -92,7 +132,24 @@ package body Conic_Fit.Generic_Ellipsoid is
          return Total;
       end Find_RSS;
 
-      Frame   : Frame_Parameters renames Result (Frame_Parameters'Range);
+      procedure MxJ (M : Mx9x9; J : in out Matrix_T) is
+      begin
+         for C in J'Range (2) loop  --  column J [1 .. Points'Length]
+            declare
+               V : constant Vector (J'Range (1)) :=  --  Column J(C) copy
+                 [for K in J'Range (1) => J (K, C)];
+            begin
+               for R in J'Range (1) loop  --  row J [1 .. 9]
+                  J (R, C) :=
+                    [for K in J'Range (1) => M (R, K) * V (K)]
+                      'Reduce ("+", Zero);
+               end loop;
+            end;
+         end loop;
+      end MxJ;
+
+      Heap      : Heap_Item_Access := new Heap_Item;
+      Frame     : Frame_Parameters renames Result (Frame_Parameters'Range);
       Ellipsoid : Ellipsoid_Parameters renames
         Result (Ellipsoid_Parameter_Index);
 
@@ -100,6 +157,7 @@ package body Conic_Fit.Generic_Ellipsoid is
       Result := Initial;
       RSS := -One;
 
+      Top_Loop :
       for Step in 1 .. Max_Steps loop
          declare
             A     : constant Number := Result (Semi_Major_Axis);
@@ -116,11 +174,11 @@ package body Conic_Fit.Generic_Ellipsoid is
               ((U / A) ** 2 + (V / B) ** 2 + (W / C) ** 2 < One);
             --  u²/a² + v²/b² + w²/c²  < 1
 
-            J_T : Matrix_T;
+            J_T : Matrix_T renames Heap.J_T;
             M   : Matrix (Matrix_T'Range (1), Matrix_T'Range (1)) :=
               [others => [others => Zero]];
 
-            Residuals : Vector (Points'Range);
+            Residuals : Residual_Vector renames Heap.Residuals;
             Change    : Vector (Matrix_T'Range (1));
             Scale     : Number := One;
          begin
@@ -259,7 +317,7 @@ package body Conic_Fit.Generic_Ellipsoid is
 
             M := Inverse (M);
 
-            J_T := M * J_T;
+            MxJ (M, J_T);  --  Calculate J_T := M * J_T;
 
             if Step = 1 then
                RSS := [for R of Residuals => R ** 2]'Reduce ("+", Zero);
@@ -267,19 +325,20 @@ package body Conic_Fit.Generic_Ellipsoid is
 
             Change := J_T * Residuals;
 
-            for J in 1 .. 10 loop
+            for J in reverse 1 .. 15 loop
                declare
                   function "+" (J : Positive)
                     return Ellipsoid_Geometric_Parameter_Index
                       is (Ellipsoid_Geometric_Parameter_Index'Val (J - 1));
 
-                  Copy : Parameters := Result;
+                  Copy     : Parameters := Result;
                   Next_RSS : Number;
                begin
                   for J in Change'Range loop
                      Copy (+J) := @ - Scale * Change (J);
                   end loop;
 
+                  --  Check ellipsoid parameters invariant
                   if Zero < Copy (Semi_Major_Axis) and then
                     Copy (Semi_Middle_Axis) < Copy (Semi_Major_Axis) and then
                     Copy (Semi_Minor_Axis) < Copy (Semi_Middle_Axis) and then
@@ -289,12 +348,12 @@ package body Conic_Fit.Generic_Ellipsoid is
                   then
                      Next_RSS := Find_RSS (Copy);
 
-                     if Next_RSS < RSS then
+                     if Next_RSS < RSS then  --  Found better parameters
                         Result := Copy;
 
                         if abs (RSS - Next_RSS) < Epsilon then
                            RSS := Next_RSS;
-                           return;
+                           exit Top_Loop;
                         end if;
 
                         RSS := Next_RSS;
@@ -302,16 +361,18 @@ package body Conic_Fit.Generic_Ellipsoid is
                      end if;
                   end if;
 
-                  Scale := Scale / (One + One);
+                  Scale := Scale / Two;  --  Reduce the parameter change
                end;
             end loop;
          end;
-      end loop;
+      end loop Top_Loop;
+
+      Free (Heap);
    end Ellipsoid_Fit;
 
-   ------------------------
+   --------------------------
    -- Ellipsoid_Projection --
-   ------------------------
+   --------------------------
 
    function Ellipsoid_Projection
      (Point      : Vector_3D;
