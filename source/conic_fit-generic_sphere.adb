@@ -3,6 +3,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
+pragma Ada_2022;
+
 with Conic_Fit.Linear_Least_Squares;
 
 package body Conic_Fit.Generic_Sphere is

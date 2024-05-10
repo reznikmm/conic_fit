@@ -50,9 +50,10 @@ begin
    Ada.Text_IO.Put_Line (Image (Result (Semi_Minor_Axis)));
    Ada.Text_IO.Put_Line ("RSS:" & Image (RSS));
 
-   pragma Assert (Image (Result (Center_X)) = " 2.6996");
-   pragma Assert (Image (Result (Center_Y)) = " 3.8160");
+   pragma Assert (Image (Result (Center_X)) = " 2.7057");
+   pragma Assert (Image (Result (Center_Y)) = " 3.8186");
    pragma Assert (Image (Result (Tilt_Angle)) = " 0.3596");
-   pragma Assert (Image (Result (Semi_Major_Axis)) = " 6.5187");
-   pragma Assert (Image (Result (Semi_Minor_Axis)) = " 3.0319");
+   pragma Assert (Image (Result (Semi_Major_Axis)) = " 6.5113");
+   pragma Assert (Image (Result (Semi_Minor_Axis)) = " 3.0314");
+   pragma Assert (Image (RSS) = " 1.3733");
 end Fitting_Ellipse;

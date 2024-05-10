@@ -3,6 +3,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
+pragma Ada_2022;
+
 procedure Conic_Fit.Linear_Least_Squares
   (Rows : Positive;
    X    : out Element_Vector)

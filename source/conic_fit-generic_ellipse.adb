@@ -3,6 +3,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
+pragma Ada_2022;
+
 package body Conic_Fit.Generic_Ellipse is
 
    function Zero return Number is (One - One);
@@ -49,7 +51,8 @@ package body Conic_Fit.Generic_Ellipse is
       Epsilon   : Number;
       Max_Steps : Positive := 50)
    is
-      subtype Matrix_T is Matrix (1 .. 5, Points'Range);
+      subtype Parameter_Index is Positive range 1 .. 5;
+      --  Ellipse parameter index as an Integer range
 
       Frame   : Frame_Parameters renames Result (Frame_Parameters'Range);
       Ellipse : Ellipse_Parameters renames Result (Ellipse_Parameter_Index);
@@ -69,13 +72,16 @@ package body Conic_Fit.Generic_Ellipse is
               ((B * U) ** 2 + (A * V) ** 2 < (A * B) ** 2);
             --  u²/a² + v²/b² < 1
 
-            J_T : Matrix_T;
-            M   : Matrix (Matrix_T'Range (1), Matrix_T'Range (1)) :=
+            M : Matrix (Parameter_Index, Parameter_Index) :=
               [others => [others => Zero]];
 
-            Residuals : Vector (Points'Range);
+            J_T_R : Vector (Parameter_Index) := [others => Zero];
+            --  Jᵀ x Residuals
+
+            Next_RSS : Number := Zero;
+
          begin
-            --  Build J_T and Residuals
+            --  Build M = Jᵀ x J and J_T_R = Jᵀ x Residuals
             for K in Points'Range loop
                declare
                   P  : constant Vector_2D := Points (K);
@@ -119,54 +125,57 @@ package body Conic_Fit.Generic_Ellipse is
                   --  a²b² * ∂P / ∂b
 
                   RV : constant Vector_2D := P - Pr;
-               begin
-                  J_T (1, K) := dP_dx0 / XY;
-                  J_T (2, K) := dP_dy0 / XY;
-                  J_T (3, K) := dP_dt / XY;
-                  J_T (4, K) := dP_da / XY;
-                  J_T (5, K) := dP_db / XY;
 
-                  Residuals (K) := Sqrt (RV (1) ** 2 + RV (2) ** 2);
+                  Residual : Number := Sqrt (RV (1) ** 2 + RV (2) ** 2);
+
+                  J_T : Vector (Parameter_Index);  --  K row of Jᵀ
+
+               begin
+                  J_T (1) := dP_dx0 / XY;
+                  J_T (2) := dP_dy0 / XY;
+                  J_T (3) := dP_dt / XY;
+                  J_T (4) := dP_da / XY;
+                  J_T (5) := dP_db / XY;
 
                   if Inside_Ellipse (CP (1), CP (2)) then
-                     Residuals (K) := -Residuals (K);
+                     Residual := -Residual;
                   end if;
-               end;
 
-               --  Fill upper half of M = J x Jᵀ
-               for I in Matrix_T'Range (1) loop
-                  for J in I .. Matrix_T'Last (1) loop
-                     M (I, J) := @ + J_T (I, K) * J_T (J, K);
+                  Next_RSS := @ + Residual ** 2;
+
+                  for J in J_T_R'Range loop
+                     J_T_R (J) := @ + J_T (J) * Residual;
                   end loop;
-               end loop;
+
+                  --  Fill upper half of M = J x Jᵀ
+                  for I in Parameter_Index loop
+                     for J in I .. Parameter_Index'Last loop
+                        M (I, J) := @ + J_T (I) * J_T (J);
+                     end loop;
+                  end loop;
+               end;
             end loop;
 
             --  Copy upper half of M to lower half
-            for I in Matrix_T'Range (1) loop
-               for J in I + 1 .. Matrix_T'Last (1) loop
+            for I in Parameter_Index loop
+               for J in I + 1 .. Parameter_Index'Last loop
                   M (J, I) := M (I, J);
                end loop;
             end loop;
 
             M := Inverse (M);
 
-            J_T := M * J_T;
-
             declare
-               D : constant Vector (Matrix_T'Range (1)) := J_T * Residuals;
+               D : constant Vector (Parameter_Index) := M * J_T_R;
+               --  D = M⁻¹ x Jᵀ x Residuals
             begin
                for J in D'Range loop
                   Result (Ellipse_Parameter_Index'Val (J - 1)) := @ - D (J);
                end loop;
             end;
 
-            declare
-               Next_RSS : constant Number :=
-                 [for R of Residuals => R ** 2]'Reduce ("+", Zero);
-            begin
-               exit when abs (RSS - Next_RSS) < Epsilon;
-               RSS := Next_RSS;
-            end;
+            exit when abs (RSS - Next_RSS) < Epsilon;
+            RSS := Next_RSS;
          end;
       end loop;
    end Ellipse_Fit;

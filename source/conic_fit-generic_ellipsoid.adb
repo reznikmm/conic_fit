@@ -3,6 +3,8 @@
 --  SPDX-License-Identifier: Apache-2.0 WITH LLVM-exception
 ----------------------------------------------------------------
 
+pragma Ada_2022;
+
 with Ada.Unchecked_Deallocation;
 
 package body Conic_Fit.Generic_Ellipsoid is
@@ -61,14 +63,16 @@ package body Conic_Fit.Generic_Ellipsoid is
       Epsilon   : Number;
       Max_Steps : Positive := 50)
    is
-      subtype Matrix_T is Matrix (1 .. 9, Points'Range);
-      --  A type of the Jacobian matrix (transposed).
+      subtype Parameter_Index is Positive range 1 .. 9;
+      --  Ellipsoid parameter index as an Integer range
 
-      subtype Residual_Vector is Vector (Points'Range);
+      subtype Mx9x9 is Matrix (Parameter_Index, Parameter_Index);
+      subtype Vx9 is Vector (Parameter_Index);
 
       type Heap_Item is record
-         J_T       : Matrix_T;
-         Residuals : Residual_Vector;
+         M     : Mx9x9;
+         J_T   : Vx9;  --  A row of Jᵀ - Jacobian matrix (transposed)
+         J_T_R : Vx9;  --  Jᵀ x Residuals
       end record;
 
       type Heap_Item_Access is access Heap_Item;
@@ -76,26 +80,22 @@ package body Conic_Fit.Generic_Ellipsoid is
       procedure Free is new Ada.Unchecked_Deallocation
         (Heap_Item, Heap_Item_Access);
 
-      subtype Mx9x9 is Matrix (Matrix_T'Range (1), Matrix_T'Range (1));
-      subtype Vx9 is Vector (Matrix_T'Range (1));
+      function "*" (M : Mx9x9; V : Vx9) return Vx9;
+      --  Calculate M * V
 
-      procedure MxJ (M : Mx9x9; J : in out Matrix_T);
-      --  Calculate J := M * J;
-
-      function "*" (J_T : Matrix_T; V : Vector) return Vx9;
       function Find_RSS (Copy : Parameters) return Number;
 
       ---------
       -- "*" --
       ---------
 
-      function "*" (J_T : Matrix_T; V : Vector) return Vx9 is
+      function "*" (M : Mx9x9; V : Vx9) return Vx9 is
          function Cell (R : Positive) return Number;
 
          function Cell (R : Positive) return Number is
-           ([for C in V'Range => J_T (R, C) * V (C)]'Reduce ("+", Zero));
+           ([for C in V'Range => M (R, C) * V (C)]'Reduce ("+", Zero));
       begin
-         return [for R in Matrix_T'Range (1) => Cell (R)];
+         return [for R in Parameter_Index => Cell (R)];
       end "*";
 
       --------------
@@ -132,22 +132,6 @@ package body Conic_Fit.Generic_Ellipsoid is
          return Total;
       end Find_RSS;
 
-      procedure MxJ (M : Mx9x9; J : in out Matrix_T) is
-      begin
-         for C in J'Range (2) loop  --  column J [1 .. Points'Length]
-            declare
-               V : constant Vector (J'Range (1)) :=  --  Column J(C) copy
-                 [for K in J'Range (1) => J (K, C)];
-            begin
-               for R in J'Range (1) loop  --  row J [1 .. 9]
-                  J (R, C) :=
-                    [for K in J'Range (1) => M (R, K) * V (K)]
-                      'Reduce ("+", Zero);
-               end loop;
-            end;
-         end loop;
-      end MxJ;
-
       Heap      : Heap_Item_Access := new Heap_Item;
       Frame     : Frame_Parameters renames Result (Frame_Parameters'Range);
       Ellipsoid : Ellipsoid_Parameters renames
@@ -155,7 +139,7 @@ package body Conic_Fit.Generic_Ellipsoid is
 
    begin
       Result := Initial;
-      RSS := -One;
+      RSS := Zero;
 
       Top_Loop :
       for Step in 1 .. Max_Steps loop
@@ -174,15 +158,14 @@ package body Conic_Fit.Generic_Ellipsoid is
               ((U / A) ** 2 + (V / B) ** 2 + (W / C) ** 2 < One);
             --  u²/a² + v²/b² + w²/c²  < 1
 
-            J_T : Matrix_T renames Heap.J_T;
-            M   : Matrix (Matrix_T'Range (1), Matrix_T'Range (1)) :=
-              [others => [others => Zero]];
-
-            Residuals : Residual_Vector renames Heap.Residuals;
-            Change    : Vector (Matrix_T'Range (1));
-            Scale     : Number := One;
+            M      : Matrix renames Heap.M;
+            J_T_R  : Vector renames Heap.J_T_R;
+            Change : Vector (Parameter_Index);
+            Scale  : Number := One;
          begin
-            --  Build J_T and Residuals
+            M := [others => [others => Zero]];
+            J_T_R := [others => Zero];
+            --  Build M and J_T_R
             for K in Points'Range loop
                declare
                   P  : constant Vector_3D := Points (K);
@@ -281,49 +264,53 @@ package body Conic_Fit.Generic_Ellipsoid is
 
                   RV    : constant Vector_3D := P - Pr;
                   --  Residual vector
-               begin
-                  J_T (1, K) := dP_dx0 / XYZ;
-                  J_T (2, K) := dP_dy0 / XYZ;
-                  J_T (3, K) := dP_dz0 / XYZ;
-                  J_T (4, K) := dP_droll / XYZ;
-                  J_T (5, K) := dP_dpitch / XYZ;
-                  J_T (6, K) := dP_dyaw / XYZ;
-                  J_T (7, K) := dP_da / XYZ;
-                  J_T (8, K) := dP_db / XYZ;
-                  J_T (9, K) := dP_dc / XYZ;
 
-                  Residuals (K) :=
+                  Residual : Number :=
                     Sqrt (RV (1) ** 2 + RV (2) ** 2 + RV (3) ** 2);
 
-                  if Inside_Ellipsoid (CP (1), CP (2), CP (3)) then
-                     Residuals (K) := -Residuals (K);
-                  end if;
-               end;
+                  J_T : Vector renames Heap.J_T;
+               begin
+                  J_T (1) := dP_dx0 / XYZ;
+                  J_T (2) := dP_dy0 / XYZ;
+                  J_T (3) := dP_dz0 / XYZ;
+                  J_T (4) := dP_droll / XYZ;
+                  J_T (5) := dP_dpitch / XYZ;
+                  J_T (6) := dP_dyaw / XYZ;
+                  J_T (7) := dP_da / XYZ;
+                  J_T (8) := dP_db / XYZ;
+                  J_T (9) := dP_dc / XYZ;
 
-               --  Fill upper half of M = J x Jᵀ
-               for I in Matrix_T'Range (1) loop
-                  for J in I .. Matrix_T'Last (1) loop
-                     M (I, J) := @ + J_T (I, K) * J_T (J, K);
+                  if Inside_Ellipsoid (CP (1), CP (2), CP (3)) then
+                     Residual := -Residual;
+                  end if;
+
+                  if Step = 1 then
+                     RSS := @ + Residual ** 2;
+                  end if;
+
+                  for J in J_T_R'Range loop
+                     J_T_R (J) := @ + J_T (J) * Residual;
                   end loop;
-               end loop;
+
+                  --  Fill upper half of M = J x Jᵀ
+                  for I in Parameter_Index loop
+                     for J in I .. Parameter_Index'Last loop
+                        M (I, J) := @ + J_T (I) * J_T (J);
+                     end loop;
+                  end loop;
+               end;
             end loop;
 
             --  Copy upper half of M to lower half
-            for I in Matrix_T'Range (1) loop
-               for J in I + 1 .. Matrix_T'Last (1) loop
+            for I in Parameter_Index loop
+               for J in I + 1 .. Parameter_Index'Last loop
                   M (J, I) := M (I, J);
                end loop;
             end loop;
 
             M := Inverse (M);
 
-            MxJ (M, J_T);  --  Calculate J_T := M * J_T;
-
-            if Step = 1 then
-               RSS := [for R of Residuals => R ** 2]'Reduce ("+", Zero);
-            end if;
-
-            Change := J_T * Residuals;
+            Change := M * J_T_R;  --  Change = M⁻¹ x Jᵀ x Residuals
 
             for J in reverse 1 .. 15 loop
                declare
