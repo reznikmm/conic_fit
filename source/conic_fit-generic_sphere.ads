@@ -10,8 +10,8 @@ with Conic_Fit.Generic_Vectors;
 generic
    type Number is private;
 
-   Zero : Number;
-   One  : Number;
+   Zero : Number;  --  0.0
+   Half : Number;  --  0.5
 
    with function "+" (L, R : Number) return Number is <>;
    with function "*" (L, R : Number) return Number is <>;

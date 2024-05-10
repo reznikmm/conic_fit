@@ -15,7 +15,7 @@ with Conic_Fit.Generic_Sphere;
 package Conic_Fit.Sphere is new Conic_Fit.Generic_Sphere
   (Number  => Float,
    Zero    => 0.0,
-   One     => 1.0,
+   Half    => 0.5,
    Matrix  => Real_Matrix,
    Vector  => Real_Vector,
    Vectors => Conic_Fit.Float_Vectors);

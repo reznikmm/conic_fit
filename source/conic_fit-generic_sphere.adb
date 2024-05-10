@@ -14,6 +14,8 @@ package body Conic_Fit.Generic_Sphere is
    function "**" (L : Number; Ignore : Small_Int) return Number is (L * L);
    function "*" (Ignore : Small_Int; R : Number) return Number is (R + R);
 
+   function One return Number is (2 * Half);
+
    ----------------
    -- Sphere_Fit --
    ----------------
@@ -25,7 +27,7 @@ package body Conic_Fit.Generic_Sphere is
 
       function A (J, K : Positive) return Number is
         (case K is
-            when 1 .. 3 => 2 * Points (J) (K),
+            when 1 .. 3 => Points (J) (K),
             when others => One);
 
       function B (J : Positive) return Number is
@@ -39,15 +41,21 @@ package body Conic_Fit.Generic_Sphere is
          A              => A,
          B              => B);
 
-      X : Vector (1 .. 4);
+      V : Vector (1 .. 4);
+
+      X, Y, Z : Number;
    begin
-      Solve (Points'Last, X);
+      Solve (Points'Last, V);
+
+      X := V (1) * Half;
+      Y := V (2) * Half;
+      Z := V (3) * Half;
 
       Result :=
-        [Center_X => X (1),
-         Center_Y => X (2),
-         Center_Z => X (3),
-         Radius   => Sqrt (X (4) + X (1) ** 2 + X (2) ** 2 + X (3) ** 2)];
+        [Center_X => X,
+         Center_Y => Y,
+         Center_Z => Z,
+         Radius   => Sqrt (V (4) + X ** 2 + Y ** 2 + Z ** 2)];
    end Sphere_Fit;
 
 end Conic_Fit.Generic_Sphere;
