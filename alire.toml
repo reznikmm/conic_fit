@@ -1,6 +1,6 @@
 name = "conic_fit"
 description = "Least squares fitting of quadratic curves and surfaces"
-version = "0.1.0-dev"
+version = "0.1.0"
 
 authors = ["Max Reznik"]
 maintainers = ["Max Reznik <reznikmm@gmail.com>"]
